@@ -1,0 +1,7 @@
+{
+  "name": "Wavelink Onboarding Hub",
+  "description": "A high-performance onboarding and document management platform for Wavelink Sustainability Ambassadors, featuring mobile-first digital signing and automated legal compliance for Bangladesh.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
