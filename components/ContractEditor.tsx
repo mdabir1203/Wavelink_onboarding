@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Employee, ContractDetails } from '../types';
 import Logo from './Logo';
@@ -8,16 +7,23 @@ interface ContractEditorProps {
   contract: ContractDetails;
   onProceed: () => void;
   onBack: () => void;
+  hideBack?: boolean;
 }
 
-const ContractEditor: React.FC<ContractEditorProps> = ({ employee, contract, onProceed, onBack }) => {
+const ContractEditor: React.FC<ContractEditorProps> = ({ employee, contract, onProceed, onBack, hideBack = false }) => {
   const [showShareToast, setShowShareToast] = useState(false);
 
   const handlePrint = () => window.print();
 
   const handleShare = async () => {
-    const encoded = btoa(JSON.stringify(employee));
-    const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+    const jsonString = JSON.stringify(employee);
+    const bytes = new TextEncoder().encode(jsonString);
+    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+    const encoded = btoa(binaryString);
+    
+    const baseUrl = window.location.href.split('?')[0];
+    const shareUrl = `${baseUrl}?data=${encodeURIComponent(encoded)}`;
+    
     if (navigator.share) {
       try {
         await navigator.share({
@@ -56,14 +62,18 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ employee, contract, onP
       )}
 
       <div className="no-print flex items-center justify-between gap-2 px-2">
-        <button onClick={onBack} className="p-3 bg-white border border-slate-200 rounded-2xl text-[#0f2d4d] hover:bg-slate-50 transition-all">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-        </button>
-        <div className="flex gap-2">
-          <button onClick={handleShare} className="wavelink-gradient text-white font-bold px-6 py-3 rounded-2xl text-sm flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-            Send to Phone
+        {!hideBack ? (
+          <button onClick={onBack} className="p-3 bg-white border border-slate-200 rounded-2xl text-[#0f2d4d] hover:bg-slate-50 transition-all">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
           </button>
+        ) : <div />}
+        <div className="flex gap-2">
+          {!hideBack && (
+            <button onClick={handleShare} className="wavelink-gradient text-white font-bold px-6 py-3 rounded-2xl text-sm flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+              Send Link
+            </button>
+          )}
           <button onClick={handlePrint} className="hidden sm:flex bg-white border border-slate-200 text-slate-700 font-bold px-6 py-3 rounded-2xl text-sm items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
             Print
@@ -91,7 +101,6 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ employee, contract, onP
           </div>
 
           <div className="space-y-12">
-            {/* 01 Compensation */}
             <div className="flex flex-col md:flex-row gap-6">
                <div className="flex-none w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-xl shadow-sm">01</div>
                <div className="space-y-6 flex-grow">
@@ -154,7 +163,6 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ employee, contract, onP
                </div>
             </div>
 
-            {/* 02 KYC */}
             <div className="flex flex-col md:flex-row gap-6">
                <div className="flex-none w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-xl shadow-sm">02</div>
                <div className="space-y-4">
@@ -162,16 +170,15 @@ const ContractEditor: React.FC<ContractEditorProps> = ({ employee, contract, onP
                   <p className="text-slate-600 font-medium text-lg leading-relaxed">{contract.kycRequirements}</p>
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl text-xs font-bold border border-amber-100">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-                    Payment is only sent after the customer is verified and Wavelink receives the funds.
+                    Payment is only sent after verification and receipt of funds.
                   </div>
                </div>
             </div>
 
-            {/* 03 Laws */}
             <div className="flex flex-col md:flex-row gap-6">
                <div className="flex-none w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-xl shadow-sm">03</div>
                <div className="space-y-6">
-                  <h4 className="text-2xl font-black text-[#0f2d4d]">Simple Rules to Follow</h4>
+                  <h4 className="text-2xl font-black text-[#0f2d4d]">Compliance Rules</h4>
                   <div className="grid grid-cols-1 gap-4">
                      {contract.legalClauses.map((clause, idx) => (
                        <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex gap-4 items-start">
